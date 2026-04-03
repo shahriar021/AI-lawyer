@@ -7,19 +7,45 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileUpload = async (f: File) => {
-    setFile(f);
-    const formData = new FormData();
-    formData.append("file", f);
+const handleFileUpload = async (f: File) => {
+  setFile(f);
+  setUploadError("");
+  setUploading(true);
+  setResult("");
+
+  const formData = new FormData();
+  formData.append("file", f);
+
+  try {
     const res = await fetch("/api/parse-doc", {
       method: "POST",
       body: formData,
     });
     const data = await res.json();
-    if (data.text) setInput(data.text);
-  };
 
+    if (data.text) {
+      // Auto-analyze the PDF text instead of putting it in textarea
+      setLoading(true);
+      const analyzeRes = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: data.text }),
+      });
+      const analyzeData = await analyzeRes.json();
+      setResult(analyzeData.result || analyzeData.error);
+      setLoading(false);
+    } else {
+      setUploadError(data.error || "Could not extract text from PDF");
+    }
+  } catch (err) {
+    setUploadError("Upload failed. Please try again.");
+  } finally {
+    setUploading(false);
+  }
+};
   const analyze = async () => {
     if (!input.trim()) return;
     setLoading(true);
@@ -64,8 +90,8 @@ export default function Home() {
             ) : (
               <>
                 <p className="text-gray-400 text-4xl mb-2">📂</p>
-                <p className="text-gray-500">Drag & drop your PDF here or click to browse</p>
-                <p className="text-gray-400 text-sm mt-1">Supports: rent agreements, job contracts, court notices etc.</p>
+                {uploading && <p className="text-blue-500 mt-2">⏳ Reading PDF...</p>}
+                {uploadError && <p className="text-red-500 mt-2">❌ {uploadError}</p>}
               </>
             )}
             <input
