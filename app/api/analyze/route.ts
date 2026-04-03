@@ -30,9 +30,21 @@ const chain = new LLMChain({ llm: model, prompt });
 export async function POST(req: Request) {
   try {
     const { input } = await req.json();
+    if (input.length > 8000) {
+      return Response.json({ error: "Input too long" }, { status: 400 });
+      // never reaches Groq, saves your quota
+    }
     const result = await chain.call({ input });
     return Response.json({ result: result.text });
   } catch (error) {
+    if (error.message?.includes("rate_limit") || error.status === 429) {
+      return Response.json(
+        {
+          error: "আজকের জন্য সার্ভার ব্যস্ত। আগামীকাল আবার চেষ্টা করুন। 🙏",
+        },
+        { status: 429 },
+      );
+    }
     return Response.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
