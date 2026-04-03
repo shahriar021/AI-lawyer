@@ -1,8 +1,9 @@
-export const runtime = "nodejs"; // ensure Node runtime, not Edge
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const { default: pdfParse } = await import("pdf-parse"); // dynamic import
+    const pdfModule = await import("pdf-parse");
+    const pdfParse = (pdfModule as any).default ?? pdfModule; 
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
