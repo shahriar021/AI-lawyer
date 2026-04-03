@@ -1,4 +1,6 @@
-import pdfParse from "pdf-parse";
+import * as pdfParseModule from "pdf-parse";
+
+const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
 
 export async function POST(req: Request) {
   try {
