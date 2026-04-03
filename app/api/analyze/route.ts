@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
     const result = await chain.call({ input });
     return Response.json({ result: result.text });
-  } catch (error) {
+  } catch (error:any) {
     if (error.message?.includes("rate_limit") || error.status === 429) {
       return Response.json(
         {
