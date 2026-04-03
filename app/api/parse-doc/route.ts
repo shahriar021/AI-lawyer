@@ -1,9 +1,9 @@
-import * as pdfParseModule from "pdf-parse";
-
-const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
+export const runtime = "nodejs"; // ensure Node runtime, not Edge
 
 export async function POST(req: Request) {
   try {
+    const { default: pdfParse } = await import("pdf-parse"); // dynamic import
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
